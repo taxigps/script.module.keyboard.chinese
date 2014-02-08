@@ -37,7 +37,7 @@ CTL_BUTTON_BACKSPACE  = 8
 
 class InputWindow(xbmcgui.WindowXMLDialog):
     def __init__( self, *args, **kwargs ):
-        self.strEdit = kwargs.get("default") or ""
+        self.strEdit = kwargs.get("default").decode('utf-8') or u""
         self.strHeading = kwargs.get("heading") or ""
         self.bIsConfirmed = False
         self.bChinese = False
@@ -147,7 +147,7 @@ class InputWindow(xbmcgui.WindowXMLDialog):
         return self.bIsConfirmed
 
     def getText(self):
-        return self.strEdit
+        return self.strEdit.encode('utf-8')
 
     def UpdateButtons(self):
         if self.bChinese:
@@ -204,7 +204,7 @@ class InputWindow(xbmcgui.WindowXMLDialog):
     def OnIPAddress(self):
         dialog = xbmcgui.Dialog()
         ip = dialog.numeric( 3, xbmc.getLocalizedString(14068), '' )
-        self.strEdit = self.strEdit + ip
+        self.strEdit += ip
         self.UpdateLabel()
 
     def UpdateLabel(self):
@@ -345,7 +345,7 @@ class Keyboard:
         self.win = InputWindow("DialogKeyboard.xml", __cwd__, heading=self.strHeading, default=self.strEdit )
         self.win.doModal()
         self.bIsConfirmed = self.win.isConfirmed()
-        self.strEdit = self.win.getText().encode('utf-8')
+        self.strEdit = self.win.getText()
         del self.win
 
     def setHeading(self, heading):
