@@ -109,14 +109,13 @@ class InputWindow(xbmcgui.WindowXMLDialog):
         if keycode >= 0xF000 and keycode < 0xF100:
         # input from the keyboard
             # Ignore non-printing characters
-            if not ((0 <= ch and ch < 0x8) or (0xE <= ch and ch < 0x1B) or (0x1C <= ch and ch < 0x20)):
+            if not ((0 <= ch and ch < 0x8) or (0xE <= ch and ch < 0x1B) or (0x1C <= ch and ch < 0x20) or (0x7f < ch)):
                 if ch == 0x8: # backspace
                     self.Backspace()
                 elif ch == 0x9: pass # Tab (do nothing)
                 elif ch == 0xB: pass # Non-printing character, ignore
                 elif ch == 0xC: pass # Non-printing character, ignore
-                elif ch == 0xA or ch == 0xD: # enter
-                    self.OnOK()
+                elif ch == 0xA or ch == 0xD: pass # enter (do nothing)
                 elif ch == 0x1B: # escape
                     self.close()
                 elif ch == 0x7f: pass # Delete (do nothing)
@@ -299,7 +298,7 @@ class InputWindow(xbmcgui.WindowXMLDialog):
 
     def ChangeWordList(self, direct):
         hzlist = ""
-        width = 0
+        width = FONTSIZE * 2 # width for '<' and '>'
         spacewidth = FONTSIZE # ' '
         numwidth = FONTSIZE * 2 # '1.'
 
@@ -333,6 +332,8 @@ class InputWindow(xbmcgui.WindowXMLDialog):
 
         #self.getControl(CTL_LABEL_HEADING).setLabel('pos:%d num:%d' %(self.pos, self.num))
         hzlist.rstrip()
+        if self.pos > 0: hzlist = '<' + hzlist
+        hzlist += '>'
         self.CTL_HZLIST.setLabel(hzlist)
 
 class Keyboard:
