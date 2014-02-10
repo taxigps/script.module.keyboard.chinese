@@ -16,6 +16,8 @@ __language__   = __addon__.getLocalizedString
 UserAgent  = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
 BAIDU_API_URL = 'http://olime.baidu.com/py?input=%s&inputtype=py&bg=%d&ed=%d&result=hanzi&resultcoding=unicode&ch_en=0&clientinfo=web'
 
+ACTION_PREVIOUS_MENU = 10
+
 FONTSIZE = 10
 
 CAPS, LOWER, SYMBOLS = range(3)
@@ -141,6 +143,8 @@ class InputWindow(xbmcgui.WindowXMLDialog):
                         self.ChangeWordList(1)
                     else:
                         self.Character(chr(ch))
+        elif action.getId() == ACTION_PREVIOUS_MENU:
+            self.close()
 
     def isConfirmed(self):
         return self.bIsConfirmed
