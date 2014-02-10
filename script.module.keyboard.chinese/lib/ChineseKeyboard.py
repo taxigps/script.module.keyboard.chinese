@@ -337,7 +337,8 @@ class InputWindow(xbmcgui.WindowXMLDialog):
         #self.getControl(CTL_LABEL_HEADING).setLabel('pos:%d num:%d' %(self.pos, self.num))
         hzlist.rstrip()
         if self.pos > 0: hzlist = '<' + hzlist
-        hzlist += '>'
+        if (self.pos + self.num < len(self.words)) or self.GetChineseWord(False):
+            hzlist += '>'
         self.CTL_HZLIST.setLabel(hzlist)
 
 class Keyboard:
