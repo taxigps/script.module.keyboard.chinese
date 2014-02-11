@@ -6,15 +6,15 @@ if sys.version_info < (2, 7):
     import simplejson
 else:
     import json as simplejson
-import cookielib
-import urllib2
+import httplib
 
 __addon__      = xbmcaddon.Addon()
 __cwd__        = __addon__.getAddonInfo('path').decode("utf-8")
 __language__   = __addon__.getLocalizedString
 
 UserAgent  = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
-BAIDU_API_URL = 'http://olime.baidu.com/py?input=%s&inputtype=py&bg=%d&ed=%d&result=hanzi&resultcoding=unicode&ch_en=0&clientinfo=web'
+BAIDU_API_BASE = 'olime.baidu.com'
+BAIDU_API_URL  = '/py?input=%s&inputtype=py&bg=%d&ed=%d&result=hanzi&resultcoding=unicode&ch_en=0&clientinfo=web'
 
 ACTION_PREVIOUS_MENU = 10
 
@@ -48,10 +48,7 @@ class InputWindow(xbmcgui.WindowXMLDialog):
         self.hzcode = ''
         self.pos = 0
         self.num = 0
-        self.cj = cookielib.CookieJar()
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
-        opener.addheaders = [('User-Agent', UserAgent)]
-        urllib2.install_opener(opener)
+        self.initHTTP()
         xbmcgui.WindowXMLDialog.__init__(self)
 
     def onInit(self):
@@ -60,6 +57,16 @@ class InputWindow(xbmcgui.WindowXMLDialog):
         self.getControl(CTL_LABEL_EDIT).setLabel(self.strEdit)
         self.getControl(CTL_BUTTON_CHINESE).setLabel('中文')
         self.UpdateButtons()
+
+    def initHTTP(self):
+        self.conn = httplib.HTTPConnection(BAIDU_API_BASE)
+        self.conn.request(method='GET',url='/')
+        res = self.conn.getresponse()
+        res.read()
+        if res.getheader('Set-Cookie')!=None:
+            self.cookie = res.getheader('Set-Cookie').split(';')[0]
+        else:
+            self.cookie='BAIDUID=5FF5CF0348C2CD89C15799855BBCB09A:FG=1'
 
     def initControl(self):
         pEdit = self.getControl(CTL_LABEL_EDIT)
@@ -280,10 +287,12 @@ class InputWindow(xbmcgui.WindowXMLDialog):
         self.CTL_HZLIST.setLabel("")
         if len(self.hzcode) > 0:
             url = BAIDU_API_URL % (self.hzcode, self.api_bg, self.api_ed)
-            req = urllib2.Request(url)
-            response = urllib2.urlopen(req)
-            httpdata = response.read()
-            response.close()
+            try:
+                self.conn.request(method='GET', url=url, headers={'Cookies':self.cookie,})
+            except Exception as e:
+                self.conn = httplib.HTTPConnection(BAIDU_API_BASE)
+                self.conn.request(method='GET', url=url, headers={'Cookies':self.cookie,})
+            httpdata = self.conn.getresponse().read()
             try:
                 jsondata = simplejson.loads(httpdata)
             except ValueError:
