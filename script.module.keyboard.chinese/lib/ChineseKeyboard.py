@@ -12,10 +12,6 @@ __addon__      = xbmcaddon.Addon()
 __cwd__        = __addon__.getAddonInfo('path').decode("utf-8")
 __language__   = __addon__.getLocalizedString
 
-UserAgent  = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
-BAIDU_API_BASE = 'olime.baidu.com'
-BAIDU_API_URL  = '/py?input=%s&inputtype=py&bg=%d&ed=%d&result=hanzi&resultcoding=unicode&ch_en=0&clientinfo=web'
-
 ACTION_PREVIOUS_MENU = 10
 
 FONTSIZE = 10
@@ -37,6 +33,28 @@ CTL_LABEL_HEADING     = 311
 
 CTL_BUTTON_BACKSPACE  = 8
 
+UserAgent  = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
+BAIDU_API_BASE = 'olime.baidu.com'
+BAIDU_API_URL  = '/py?input=%s&inputtype=py&bg=%d&ed=%d&result=hanzi&resultcoding=unicode&ch_en=0&clientinfo=web'
+
+class HttpClient(object):
+    def __init__(self, address):
+        self.address = address
+        self.conn = httplib.HTTPConnection(address)
+        self.headers = {'User-Agent':UserAgent}
+
+    def Get(self, url):
+        try:
+            self.conn.request(method='GET', url=url, headers=self.headers)
+        except Exception as e:
+            self.conn = httplib.HTTPConnection(self.address)
+            self.conn.request(method='GET', url=url, headers=self.headers)
+        res = self.conn.getresponse()
+        httpdata = res.read()
+        if 'Cookie' not in self.headers and res.getheader('Set-Cookie'):
+            self.headers['Cookie'] = res.getheader('Set-Cookie').split(';')[0]
+        return httpdata
+
 class InputWindow(xbmcgui.WindowXMLDialog):
     def __init__( self, *args, **kwargs ):
         self.strEdit = kwargs.get("default").decode('utf-8') or u""
@@ -48,7 +66,7 @@ class InputWindow(xbmcgui.WindowXMLDialog):
         self.hzcode = ''
         self.pos = 0
         self.num = 0
-        self.initHTTP()
+        self.HTTP = HttpClient(BAIDU_API_BASE)
         xbmcgui.WindowXMLDialog.__init__(self)
 
     def onInit(self):
@@ -57,16 +75,6 @@ class InputWindow(xbmcgui.WindowXMLDialog):
         self.getControl(CTL_LABEL_EDIT).setLabel(self.strEdit)
         self.getControl(CTL_BUTTON_CHINESE).setLabel('中文')
         self.UpdateButtons()
-
-    def initHTTP(self):
-        self.conn = httplib.HTTPConnection(BAIDU_API_BASE)
-        self.conn.request(method='GET',url='/')
-        res = self.conn.getresponse()
-        res.read()
-        if res.getheader('Set-Cookie')!=None:
-            self.cookie = res.getheader('Set-Cookie').split(';')[0]
-        else:
-            self.cookie='BAIDUID=5FF5CF0348C2CD89C15799855BBCB09A:FG=1'
 
     def initControl(self):
         pEdit = self.getControl(CTL_LABEL_EDIT)
@@ -287,12 +295,7 @@ class InputWindow(xbmcgui.WindowXMLDialog):
         self.CTL_HZLIST.setLabel("")
         if len(self.hzcode) > 0:
             url = BAIDU_API_URL % (self.hzcode, self.api_bg, self.api_ed)
-            try:
-                self.conn.request(method='GET', url=url, headers={'Cookies':self.cookie,})
-            except Exception as e:
-                self.conn = httplib.HTTPConnection(BAIDU_API_BASE)
-                self.conn.request(method='GET', url=url, headers={'Cookies':self.cookie,})
-            httpdata = self.conn.getresponse().read()
+            httpdata = self.HTTP.Get(url)
             try:
                 jsondata = simplejson.loads(httpdata)
             except ValueError:
