@@ -1,4 +1,7 @@
-﻿v2.0.3 2015-01-16
+﻿v2.0.4 2015-02-01
+ - Create customized xml file to support more skin
+
+v2.0.3 2015-01-16
  - Work around crash bug with edit control
 
 v2.0.2 2014-11-30
